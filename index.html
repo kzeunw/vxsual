@@ -456,7 +456,7 @@ function computeLayout(W, H) {
 }
 function mulberry32(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 function renderBg() {
-  const W = cv.width, H = cv.height, s = L.s, b = bg.getContext('2d');
+  const W = cv.width, H = cv.height, b = bg.getContext('2d');
   bg.width = W; bg.height = H;
   b.fillStyle = TH.bg; b.fillRect(0, 0, W, H);
   if (TH.glyph) {                       // giant ghosted kana behind everything
@@ -465,20 +465,6 @@ function renderBg() {
     b.font = `900 ${big}px "Yu Gothic UI","Meiryo","Hiragino Sans","Noto Sans JP",sans-serif`;
     ['お', 'ん', 'が', 'く'].forEach((c, i) => b.fillText(c, W * (0.11 + 0.26 * i), H * (0.5 + (i % 2 ? 0.07 : -0.05))));
   }
-  const rnd = mulberry32(L.portrait ? 11 : 5), cell = TH.grid * s, cols = Math.ceil(W / cell), rows = Math.ceil(H / cell);
-  const n = Math.round(cols * rows / (L.portrait ? 16 : 22)), ns = TH.node * s;
-  b.lineWidth = Math.max(1, TH.circW * s); b.strokeStyle = TH.circ; b.lineJoin = 'miter';
-  for (let i = 0; i < n; i++) {
-    let x = Math.floor(rnd() * cols), y = Math.floor(rnd() * rows), horiz = rnd() < 0.5;
-    b.globalAlpha = 0.45 + rnd() * 0.55;
-    b.beginPath(); b.moveTo(x * cell, y * cell);
-    const segs = 1 + Math.floor(rnd() * 4);
-    for (let j = 0; j < segs; j++) { const len = (2 + Math.floor(rnd() * 9)) * (rnd() < 0.5 ? -1 : 1); if (horiz) x += len; else y += len; b.lineTo(x * cell, y * cell); horiz = !horiz; }
-    b.stroke();
-    b.fillStyle = TH.bg; b.fillRect(x * cell - ns / 2, y * cell - ns / 2, ns, ns); b.strokeRect(x * cell - ns / 2, y * cell - ns / 2, ns, ns);
-    if (rnd() < 0.22) { const rx = Math.floor(rnd() * cols), ry = Math.floor(rnd() * rows); b.strokeRect(rx * cell, ry * cell, (3 + Math.floor(rnd() * 8)) * cell, (2 + Math.floor(rnd() * 5)) * cell); }
-  }
-  b.globalAlpha = 1;
 }
 function resize() {
   let W, H;
@@ -550,28 +536,7 @@ function drawTracks(now) {
 }
 
 function drawInfo() {
-  const fs = L.font, lh = L.lh, I = L.info, B = L.tab;
-  const stars = '******************', vol = 'SysEx GS: マスター音量 = ' + Math.round(S.vol * 127);
-  const lvl = Math.round(S.level), pan = Math.round(S.pan);
-  let rows;
-  if (L.portrait) {
-    T('テキスト: ' + stars, I.x, I.y, TH.accent, fs);
-    T('テキスト: ' + (S.credit || '曲の設定'), I.x, I.y + lh, TH.accent, fs);
-    T('SysEx: GS リセット', I.x, I.y + lh * 2, TH.ink, fs);
-    T(vol, I.x, I.y + lh * 3, TH.ink, fs);
-    rows = [['レベル', lvl], ['パン', pan], ['リバーブ', 64], ['コーラス', 64]];
-  } else {
-    T('テキスト: ' + stars, I.x, I.y, TH.accent, fs);
-    T('テキスト:    曲の設定', I.x, I.y + lh, TH.accent, fs);
-    T('テキスト: ' + (S.credit || 'GT.3'), I.x, I.y + lh * 2, TH.accent, fs);
-    T('テキスト: ' + stars, I.x, I.y + lh * 3, TH.accent, fs);
-    T('SysEx: GS リセット', I.x, I.y + lh * 4.1, TH.ink, fs);
-    T(vol, I.x, I.y + lh * 5.1, TH.ink, fs);
-    rows = [['パート', '全部'], ['レベル', lvl], ['パン', pan], ['表現', Math.round(clamp(S.peak, 0, 1) * 127)],
-            ['リバーブ', 64], ['コーラス', 64], ['ディレイ', 64], ['移調', '±0'], ['調', S.key || '---']];
-  }
-  rows.forEach((r, i) => { T(r[0], B.x, B.y + i * lh, TH.ink, fs); T(String(r[1]), B.xr, B.y + i * lh, TH.ink, fs, 'right'); });
-  T('-可視化-', L.viz.x, L.viz.y, TH.ink, fs, 'center', FJ, 0.85);
+  T('-可視化-', L.viz.x, L.viz.y, TH.ink, L.font, 'center', FJ, 0.85);
 }
 
 const TICKS = [[50, '50'], [100, '100'], [200, '200'], [500, '500'], [1000, '1.0k'], [2000, '2.0k'], [5000, '5.0k'], [10000, '10k']];
